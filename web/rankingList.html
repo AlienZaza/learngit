@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <title>Ranking list</title>
+    <link rel="stylesheet" href="registration.css" type="text/css" media="screen" />
+    <script src="js/jquery.js"></script>
+    <script src="js/jquery.validate.js"></script>
+    <script src="js/jquery.flexslider.min.js"></script>
+</head>
+<style type="text/css">
+* {
+    font-family: "Arial", "宋体", sans-serif;
+}
+</style>
+
+<body>
+    <div id="app">
+        <div class="container" id="container">
+            <div class="text-center" style="padding: 20px 0 0;background-color: #ffffff">
+                <img src="images/ranking_logo@3x.png" style="width:65%;">
+                <!-- <div style="word-wrap: break-word;padding:26px 16px;font-size: 14px;">Players are invited to vote for the favorite car.  The car that obtains the highest numbers of votes will be awarded the titles of “My Favorite Car”.  Prize winner will be selected in lucky draw from those who have voted for the winning “My Favorite Car”.  Stay tuned for more details!</div> -->
+            </div>
+            <!-- <div style="height:10px;width: 100%;background-color:rgb(242,242,242) "></div> -->
+            <div class="title">
+                <div class="en_US hide">
+                    <div class="rank f-l text-center">Pos</div>
+                    <div class="player f-l">Player</div>
+                    <div class="time f-r">Time</div>
+                </div>
+                <div class="zh_HK hide">
+                    <div class="rank f-l text-center">名次</div>
+                    <div class="player f-l">玩家代號</div>
+                    <div class="time f-r">時間</div>
+                </div>
+            </div> 
+            <div class="line"></div>
+            <ul class="rankList">
+                <!-- <li v-for="obj in allRanking">
+                    <div class="rank f-l text-center">
+                        <img src="images/rankingGold.png" v-if="obj.ranking==1">
+                        <img src="images/rankingSilver.png" v-if="obj.ranking==2">
+                        <img src="images/rankingCopper.png" v-if="obj.ranking==3">
+                        <span v-if="obj.ranking!=1&&obj.ranking!=2&&obj.ranking!=3">{{obj.ranking}}</span>
+                    </div>
+                    <div class="player f-l">{{obj.userName}}</div>
+                    <div class="time f-r text-right">
+                        <div class="up">{{obj.gameScore}}</div>
+                        <div class="down">{{obj.gameTime}}</div>
+                    </div>
+                </li> -->
+                <li v-for="obj in allRanking">
+                    <div class="rank f-l text-center">
+                        <span class="getData hide">{{obj.ranking}}</span>
+                        <img src="images/ranking_number@3x.png">
+                    </div>
+                    <div style="padding-right: 20px;overflow: hidden;">
+                        <div class="getData hide" style="overflow: hidden;border-bottom:2px solid rgb(219,173,54);height: 57px">
+                            <div class="player f-l">{{obj.userName}}</div>
+                                <div class="time f-r text-right">
+                                    <div class="up">{{obj.gameTime}}</div>
+                                    <div class="down">{{obj.gameDate}}</div>
+                                </div>
+                        </div>
+                    </div>
+                </li>
+                <li class="getData hide">
+                    <div class="text-right en_US hide" style="font-size: 12px;padding-right: 20px">
+                        Last Updated Time : {{updateTime}}
+                    </div>
+                    <div class="text-right zh_HK hide" style="font-size: 12px;padding-right: 20px">
+                        最後更新 : {{updateTime}}
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <script src="js/vue.js"></script>
+</body>
+</script>
+<script type="text/javascript">
+function GetRequest() {
+    var url = location.search;
+    var theRequest = new Object();
+    if (url.indexOf("?") != -1) {
+        var str = url.substr(1);
+        strs = str.split("&");
+        for (var i = 0; i < strs.length; i++) {
+            theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+        }
+    }
+    return theRequest;
+}
+var Request = new Object();
+Request = GetRequest();
+if (Request.langCode == "en_US") {
+    $(".en_US").removeClass('hide');
+} else if (Request.langCode == "zh_HK") {
+    $(".zh_HK").removeClass('hide');
+}
+$(function() {
+
+    var rankingListUrl = '//' + window.location.host + '/pico_api/getGameRanking.do';
+
+    var postData = {
+        // "userId": 21,
+        // "session": "49fcd0e7-ce3a-49c6-926e-8c0549b4b0a2",
+        // "langCode": "en_US"
+        "userId": Request.userId,
+        "session": Request.session,
+        "langCode": Request.langCode
+    };
+
+    var a = [];
+    //postData.encStr = escape(postData.encStr).replace(/\+/g, '%2B').replace(/\"/g, '%22').replace(/\'/g, '%27').replace(/\//g, '%2F');
+    $.ajax({
+        type: 'POST',
+        url: rankingListUrl,
+        context: document.body,
+        data: postData,
+        success: function(data) {
+            var rankingList = data.result[0].rankingList;
+            // for (var i = 0; i < newsList.length; i++) {
+            //     newsList[i].date = formatDate(newsList[i].date, "dd/mm/yy");
+                
+            // }
+
+            var vm = new Vue({
+                el: '#app',
+                data: { allRanking: rankingList ,
+                    updateTime:  data.result[0].updateTime}
+            })
+            $(".getData").removeClass('hide');
+
+        }
+    })
+})
+
+function expandEvent(input) {
+    var text = ".rolling-banner_" + input + " .desc p";
+    $(text).css('display', 'block');
+    $(".more_" + input).addClass('hide');
+    $(".close_" + input).removeClass('hide');
+}
+
+function closeEvent(input) {
+    var text = ".rolling-banner_" + input + " .desc p";
+    $(text).css('display', '-webkit-box');
+    $(".more_" + input).removeClass('hide');
+    $(".close_" + input).addClass('hide');
+}
+
+function openLink(url) {
+    window.location.href = url + "?openExternal=1";
+}
+
+var formatDate = function(input, rule) {
+    var symbol;
+    if (rule.indexOf(".") > 0) {
+        symbol = ".";
+    } else if (rule.indexOf("-") > 0) {
+        symbol = "-";
+    } else if (rule.indexOf("/") > 0) {
+        symbol = "/";
+    }
+    var timeStampArray = input.split(/[. -/:]/);
+    if (!timeStampArray[3]) {
+        timeStampArray[3] = "00";
+    }
+    if (!timeStampArray[4]) {
+        timeStampArray[4] = "00";
+    }
+    if (!timeStampArray[5]) {
+        timeStampArray[5] = "00";
+    }
+    var timeStamp = new Date(timeStampArray[0], timeStampArray[1] - 1, timeStampArray[2], timeStampArray[3], timeStampArray[4], timeStampArray[5]);
+    var year = timeStamp.getFullYear();
+    var shortYear = year.toString().substring(2);
+    var month = timeStamp.getMonth() + 1;
+    if (month < 10) {
+        month = "0" + month;
+    }
+    var date = timeStamp.getDate();
+    if (date < 10) {
+        date = "0" + date;
+    }
+    var ruleArray = rule.split(/[-. \\/]/);
+    var x = "";
+    for (var i = 0; i < ruleArray.length; i++) {
+        if (ruleArray[i] == "dd") {
+            x += date + symbol;
+        } else if (ruleArray[i] == "yyyy") {
+            x += year + symbol;
+        } else if (ruleArray[i] == "mm") {
+            x += month + symbol;
+        } else if (ruleArray[i] == "yy") {
+            x += shortYear + symbol;
+        }
+    }
+    return x.slice(0, x.length - 1);
+}
+var formatHttp = function(str){
+    var result = str.replace(/http:|https/,"");
+    return result;
+}
+</script>
+
+</html>
